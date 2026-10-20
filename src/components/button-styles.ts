@@ -1,12 +1,10 @@
 const base =
-  "inline-flex min-h-11 items-center justify-center rounded-md px-5 py-2.5 text-center text-sm font-semibold tracking-tight transition-colors duration-150";
+  "inline-flex min-h-11 items-center justify-center rounded-md px-5 py-3 text-center text-sm font-bold tracking-tight transition duration-200";
 
 export const buttonClass = {
-  primary: `${base} bg-blue text-white hover:bg-blue-dark`,
-  secondary: `${base} border border-line bg-white text-navy hover:border-navy/30 hover:bg-mist`,
-  inverse: `${base} bg-white text-navy hover:bg-mist`,
-  ghostLight: `${base} border border-white/30 text-white hover:bg-white/10`,
+  primary: `${base} bg-brand text-white hover:-translate-y-px hover:bg-brand-dark hover:shadow-[0_8px_18px_rgba(226,29,57,0.28)]`,
+  primaryLg: `${base} bg-brand px-6 py-4 text-base text-white hover:-translate-y-px hover:bg-brand-dark hover:shadow-[0_8px_18px_rgba(226,29,57,0.28)]`,
+  secondary: `${base} border border-line bg-white text-navy hover:border-[#b7d4e8] hover:bg-[#f4f8fb]`,
+  inverse: `${base} bg-white text-navy hover:bg-[#e7f3fa]`,
+  ghostOnNavy: `${base} border border-white/35 bg-transparent text-white hover:bg-white hover:text-navy`,
 } as const;
-
-export const textLinkClass =
-  "inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-blue hover:text-blue-dark";

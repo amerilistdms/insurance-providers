@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
+import { company } from "@/content/site";
 
-export const alt = "AmeriList — Find Medicare prospects in your market";
+export const alt = `${company.name} — Prospect data for insurance marketers`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -14,18 +15,18 @@ export default function OpenGraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#0e2744",
-          color: "#f4f7fa",
+          background: "#12344d",
+          color: "#ffffff",
           padding: "72px",
         }}
       >
-        <div style={{ display: "flex", fontSize: 28, letterSpacing: 1, color: "#8fd4de" }}>AmeriList</div>
+        <div style={{ display: "flex", fontSize: 28, letterSpacing: 0.4 }}>{company.name}</div>
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", fontSize: 64, fontWeight: 600, lineHeight: 1.1, maxWidth: 900 }}>
-            Find Medicare prospects in your market
+          <div style={{ display: "flex", fontSize: 64, fontWeight: 500, lineHeight: 1.08, maxWidth: 920 }}>
+            Prospect data for insurance marketers
           </div>
-          <div style={{ display: "flex", marginTop: 24, fontSize: 26, color: "#c5d4e0", maxWidth: 820 }}>
-            Prospect data and marketing for agents, agencies, and marketers.
+          <div style={{ display: "flex", marginTop: 24, fontSize: 26, color: "#d5e3e4", maxWidth: 820 }}>
+            Email, direct mail, and phone lists for Medicare, final expense, and life and health campaigns.
           </div>
         </div>
       </div>

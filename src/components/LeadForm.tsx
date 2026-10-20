@@ -1,26 +1,25 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type FormEvent, type InputHTMLAttributes } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { interestOptions, leadForm } from "@/content/site";
 import { RichText } from "@/components/RichText";
 import { buttonClass } from "@/components/button-styles";
-import { leadsEnabled } from "@/lib/site";
 import { validateLead, type LeadErrors } from "@/lib/leads";
 
 type LeadFormProps = {
   defaultInterest?: string;
+  id?: string;
 };
 
 type Delivery = "idle" | "submitting" | "success" | "unconfigured" | "error";
 
-const fields = ["firstName", "lastName", "company", "email", "phone", "market", "areaOfInterest"] as const;
+const fields = ["fullName", "email", "phone", "interest", "zip", "notes", "consent"] as const;
 
-export function LeadForm({ defaultInterest = "" }: LeadFormProps) {
+export function LeadForm({ defaultInterest = "", id = "quote" }: LeadFormProps) {
   const pathname = usePathname();
   const formId = useId();
   const statusRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
   const lock = useRef(false);
   const [errors, setErrors] = useState<LeadErrors>({});
   const [delivery, setDelivery] = useState<Delivery>("idle");
@@ -45,9 +44,7 @@ export function LeadForm({ defaultInterest = "" }: LeadFormProps) {
 
     if (!result.value) {
       const firstInvalid = fields.find((field) => result.errors[field]);
-      if (firstInvalid) {
-        form.querySelector<HTMLElement>(`[name="${firstInvalid}"]`)?.focus();
-      }
+      if (firstInvalid) form.querySelector<HTMLElement>(`[name="${firstInvalid}"]`)?.focus();
       return;
     }
 
@@ -65,6 +62,8 @@ export function LeadForm({ defaultInterest = "" }: LeadFormProps) {
       if (body?.code === "invalid" && body.errors) {
         setErrors(body.errors);
         setDelivery("idle");
+        const firstInvalid = fields.find((field) => body.errors?.[field]);
+        if (firstInvalid) form.querySelector<HTMLElement>(`[name="${firstInvalid}"]`)?.focus();
         return;
       }
 
@@ -82,266 +81,206 @@ export function LeadForm({ defaultInterest = "" }: LeadFormProps) {
       form.reset();
     } catch {
       setDelivery("error");
-      statusRef.current?.focus();
     } finally {
       lock.current = false;
     }
   }
 
-  function clearError(name: string) {
+  function clearError(name: keyof LeadErrors) {
     setErrors((current) => {
-      if (!current[name as keyof LeadErrors]) return current;
+      if (!current[name]) return current;
       const next = { ...current };
-      delete next[name as keyof LeadErrors];
+      delete next[name];
       return next;
     });
   }
 
-  if (delivery === "success") {
+  if (delivery === "success" || delivery === "unconfigured" || delivery === "error") {
+    const title =
+      delivery === "success" ? leadForm.successTitle : delivery === "unconfigured" ? leadForm.unconfiguredTitle : leadForm.errorTitle;
+    const body =
+      delivery === "success" ? leadForm.successBody : delivery === "unconfigured" ? leadForm.unconfiguredBody : leadForm.errorBody;
+
     return (
-      <div ref={statusRef} tabIndex={-1} role="status" className="scroll-mt-32 rounded-xl border border-ok/30 bg-ok-soft p-6 outline-none">
-        <h3 className="text-lg font-semibold text-navy">{leadForm.successTitle}</h3>
-        <p className="mt-2 text-sm leading-6 text-ink">{leadForm.successBody}</p>
+      <div
+        id={id}
+        ref={statusRef}
+        tabIndex={-1}
+        role="status"
+        className="scroll-mt-28 rounded-2xl border border-line bg-white p-6 outline-none sm:p-8"
+      >
+        <h2 className="text-3xl font-bold tracking-tight text-navy">{title}</h2>
+        <p className="mt-3 text-base leading-7 text-muted">{body}</p>
+        {delivery !== "success" ? (
+          <button type="button" className={`${buttonClass.primary} mt-6`} onClick={() => setDelivery("idle")}>
+            Edit and try again
+          </button>
+        ) : null}
       </div>
     );
   }
 
   return (
-    <div>
-      {!leadsEnabled ? (
-        <div className="mb-5 rounded-lg border border-[#e4d3b0] bg-sand px-4 py-3 text-sm leading-6 text-navy">
-          <p>{leadForm.placeholderBody}</p>
-        </div>
+    <form id={id} className="scroll-mt-28" onSubmit={onSubmit} noValidate>
+      <h2 className="text-3xl font-bold tracking-tight text-navy">{leadForm.title}</h2>
+      <p className="mt-2 max-w-xl text-base leading-7 text-muted">{leadForm.lede}</p>
+
+      {errors.form ? (
+        <p className="mt-4 rounded-lg border border-danger/30 bg-white px-3 py-2 text-sm text-danger" role="alert">
+          {errors.form}
+        </p>
       ) : null}
 
-      <div ref={statusRef} tabIndex={-1} className="scroll-mt-32 outline-none">
-        {delivery === "unconfigured" ? (
-          <div role="alert" className="mb-5 rounded-lg border border-[#e4d3b0] bg-sand px-4 py-3 text-sm leading-6 text-navy">
-            <p className="font-semibold">{leadForm.notSentTitle}</p>
-            <p className="mt-1">{leadForm.notSentBody}</p>
-          </div>
-        ) : null}
-        {delivery === "error" ? (
-          <div role="alert" className="mb-5 rounded-lg border border-danger/30 bg-white px-4 py-3 text-sm leading-6 text-danger">
-            <p className="font-semibold">{leadForm.errorTitle}</p>
-            <p className="mt-1">{leadForm.errorBody}</p>
-          </div>
-        ) : null}
-      </div>
-
-      <form ref={formRef} id={formId} className="grid gap-4" noValidate onSubmit={onSubmit}>
-        <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
-          <label htmlFor={`${formId}-website`}>Website</label>
-          <input id={`${formId}-website`} name="website" type="text" tabIndex={-1} autoComplete="off" />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            id={`${formId}-first-name`}
-            name="firstName"
-            label="First name"
-            autoComplete="given-name"
-            error={errors.firstName}
-            onInput={() => clearError("firstName")}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Field label="Full Name" error={errors.fullName} id={`${formId}-name`}>
+          <input
+            id={`${formId}-name`}
+            name="fullName"
+            autoComplete="name"
+            required
+            aria-invalid={Boolean(errors.fullName)}
+            aria-describedby={errors.fullName ? `${formId}-name-error` : undefined}
+            className={inputClass(Boolean(errors.fullName))}
+            onInput={() => clearError("fullName")}
           />
-          <Field
-            id={`${formId}-last-name`}
-            name="lastName"
-            label="Last name"
-            autoComplete="family-name"
-            error={errors.lastName}
-            onInput={() => clearError("lastName")}
+        </Field>
+        <Field label="Email" error={errors.email} id={`${formId}-email`}>
+          <input
+            id={`${formId}-email`}
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? `${formId}-email-error` : undefined}
+            className={inputClass(Boolean(errors.email))}
+            onInput={() => clearError("email")}
           />
-        </div>
-
-        <Field
-          id={`${formId}-company`}
-          name="company"
-          label="Company"
-          autoComplete="organization"
-          error={errors.company}
-          onInput={() => clearError("company")}
-        />
-
-        <Field
-          id={`${formId}-email`}
-          name="email"
-          label="Email address"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          error={errors.email}
-          onInput={() => clearError("email")}
-        />
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
+        </Field>
+        <Field label="Phone" error={errors.phone} id={`${formId}-phone`}>
+          <input
             id={`${formId}-phone`}
             name="phone"
-            label="Phone number"
-            hint="Optional"
             type="tel"
             autoComplete="tel"
             inputMode="tel"
-            error={errors.phone}
+            required
+            aria-invalid={Boolean(errors.phone)}
+            aria-describedby={errors.phone ? `${formId}-phone-error` : undefined}
+            className={inputClass(Boolean(errors.phone))}
             onInput={() => clearError("phone")}
           />
-          <Field
-            id={`${formId}-market`}
-            name="market"
-            label="Market"
-            autoComplete="off"
-            placeholder="ZIPs, county, or state"
-            error={errors.market}
-            onInput={() => clearError("market")}
+        </Field>
+        <Field label={leadForm.interestLabel} error={errors.interest} id={`${formId}-interest`}>
+          <select
+            id={`${formId}-interest`}
+            name="interest"
+            defaultValue={initialInterest}
+            required
+            aria-invalid={Boolean(errors.interest)}
+            aria-describedby={errors.interest ? `${formId}-interest-error` : undefined}
+            className={inputClass(Boolean(errors.interest))}
+            onChange={() => clearError("interest")}
+          >
+            <option value="">{leadForm.interestPlaceholder}</option>
+            {interestOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={leadForm.zipLabel} error={errors.zip} id={`${formId}-zip`}>
+          <input
+            id={`${formId}-zip`}
+            name="zip"
+            inputMode="numeric"
+            autoComplete="postal-code"
+            required
+            aria-invalid={Boolean(errors.zip)}
+            aria-describedby={errors.zip ? `${formId}-zip-error` : undefined}
+            className={inputClass(Boolean(errors.zip))}
+            onInput={() => clearError("zip")}
           />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label={leadForm.notesLabel} optional error={errors.notes} id={`${formId}-notes`}>
+            <textarea
+              id={`${formId}-notes`}
+              name="notes"
+              rows={4}
+              aria-invalid={Boolean(errors.notes)}
+              aria-describedby={errors.notes ? `${formId}-notes-error` : undefined}
+              className={inputClass(Boolean(errors.notes))}
+              onInput={() => clearError("notes")}
+            />
+          </Field>
         </div>
+      </div>
 
-        <SelectField
-          id={`${formId}-interest`}
-          name="areaOfInterest"
-          label="Audience"
-          placeholder="Select an audience"
-          options={interestOptions}
-          defaultValue={initialInterest}
-          required
-          error={errors.areaOfInterest}
-          onChange={() => clearError("areaOfInterest")}
-        />
+      <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+        <label htmlFor={`${formId}-website`}>Website</label>
+        <input id={`${formId}-website`} name="website" tabIndex={-1} autoComplete="off" />
+      </div>
 
-        {errors.form ? (
-          <p role="alert" className="text-sm text-danger">
-            {errors.form}
+      <div className="mt-5">
+        <label className="flex items-start gap-3 text-sm leading-6 text-ink">
+          <input
+            name="consent"
+            type="checkbox"
+            value="yes"
+            className="mt-1 h-4 w-4 shrink-0 accent-teal"
+            aria-invalid={Boolean(errors.consent)}
+            aria-describedby={errors.consent ? `${formId}-consent-error` : undefined}
+            onChange={() => clearError("consent")}
+          />
+          <span>
+            <RichText text={leadForm.consent} />
+          </span>
+        </label>
+        {errors.consent ? (
+          <p id={`${formId}-consent-error`} className="mt-2 text-sm text-danger">
+            {errors.consent}
           </p>
         ) : null}
+      </div>
 
-        <p className="text-sm leading-6 text-muted">
-          <RichText text={leadForm.privacyNotice} />
-        </p>
-
-        <button type="submit" className={buttonClass.primary} disabled={delivery === "submitting"} aria-busy={delivery === "submitting"}>
-          {delivery === "submitting" ? leadForm.submitting : leadForm.submit}
-        </button>
-      </form>
-
-      <noscript>
-        <p className="mt-4 text-sm leading-6 text-navy">Enable JavaScript to use this form. It will not submit until it is connected.</p>
-      </noscript>
-    </div>
+      <button type="submit" className={`${buttonClass.primary} mt-6`} disabled={delivery === "submitting"}>
+        {delivery === "submitting" ? leadForm.submitting : leadForm.submit}
+      </button>
+    </form>
   );
 }
 
 function Field({
-  id,
-  name,
   label,
-  hint,
+  optional,
   error,
-  onInput,
-  type = "text",
-  ...props
+  id,
+  children,
 }: {
-  id: string;
-  name: string;
   label: string;
-  hint?: string;
+  optional?: boolean;
   error?: string;
-  onInput: () => void;
-  type?: string;
-} & InputHTMLAttributes<HTMLInputElement>) {
-  const errorId = `${id}-error`;
-  const hintId = `${id}-hint`;
-  const describedBy = [hint ? hintId : "", error ? errorId : ""].filter(Boolean).join(" ") || undefined;
-
+  id: string;
+  children: ReactNode;
+}) {
   return (
-    <div>
-      <label htmlFor={id} className="mb-1.5 flex items-baseline justify-between gap-3 text-sm font-medium text-navy">
-        <span>{label}</span>
-        {hint ? (
-          <span id={hintId} className="text-xs font-normal text-muted">
-            {hint}
-          </span>
-        ) : null}
-      </label>
-      <input
-        id={id}
-        name={name}
-        type={type}
-        aria-invalid={Boolean(error)}
-        aria-describedby={describedBy}
-        onInput={onInput}
-        className="min-h-11 w-full rounded-md border border-line bg-white px-3 text-base text-ink placeholder:text-muted/70"
-        {...props}
-      />
+    <label className="block text-sm font-semibold text-navy" htmlFor={id}>
+      {label}
+      {optional ? <span className="ml-2 font-normal text-muted">Optional</span> : null}
+      <span className="mt-1.5 block font-normal">{children}</span>
       {error ? (
-        <p id={errorId} className="mt-1.5 text-sm text-danger">
+        <span id={`${id}-error`} className="mt-1.5 block text-sm font-normal text-danger">
           {error}
-        </p>
+        </span>
       ) : null}
-    </div>
+    </label>
   );
 }
 
-function SelectField({
-  id,
-  name,
-  label,
-  hint,
-  placeholder,
-  options,
-  error,
-  defaultValue = "",
-  required = false,
-  onChange,
-}: {
-  id: string;
-  name: string;
-  label: string;
-  hint?: string;
-  placeholder: string;
-  options: readonly string[];
-  error?: string;
-  defaultValue?: string;
-  required?: boolean;
-  onChange: () => void;
-}) {
-  const errorId = `${id}-error`;
-  const hintId = `${id}-hint`;
-  const describedBy = [hint ? hintId : "", error ? errorId : ""].filter(Boolean).join(" ") || undefined;
-
-  return (
-    <div>
-      <label htmlFor={id} className="mb-1.5 flex items-baseline justify-between gap-3 text-sm font-medium text-navy">
-        <span>{label}</span>
-        {hint ? (
-          <span id={hintId} className="text-xs font-normal text-muted">
-            {hint}
-          </span>
-        ) : null}
-      </label>
-      <select
-        id={id}
-        name={name}
-        defaultValue={defaultValue}
-        required={required}
-        aria-required={required || undefined}
-        aria-invalid={Boolean(error)}
-        aria-describedby={describedBy}
-        onChange={onChange}
-        className="min-h-11 w-full rounded-md border border-line bg-white px-3 text-base text-ink"
-      >
-        <option value="">{placeholder}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      {error ? (
-        <p id={errorId} className="mt-1.5 text-sm text-danger">
-          {error}
-        </p>
-      ) : null}
-    </div>
-  );
+function inputClass(invalid: boolean) {
+  return `w-full rounded-lg border bg-white px-3 py-2.5 text-base font-normal text-ink outline-none ${
+    invalid ? "border-danger" : "border-line"
+  }`;
 }

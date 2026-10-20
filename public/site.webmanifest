@@ -1,11 +1,11 @@
 {
   "name": "AmeriList",
   "short_name": "AmeriList",
-  "description": "Medicare prospect data and marketing for agents, agencies, and marketers.",
+  "description": "Data and direct marketing for insurance agents, agencies, and marketers.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0e2744",
+  "theme_color": "#12344d",
   "icons": [
     {
       "src": "/favicon.svg",

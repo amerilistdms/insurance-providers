@@ -3,37 +3,34 @@ import Link from "next/link";
 import { FaqList } from "@/components/FaqList";
 import { PageHeader } from "@/components/PageBlocks";
 import { buttonClass } from "@/components/button-styles";
-import { cta, faqPage, faqs } from "@/content/site";
+import { company, cta, faqPage, homeFaqs } from "@/content/site";
 
 export const metadata: Metadata = {
-  title: "Frequently Asked Questions",
-  description: "Answers to common questions about AmeriList prospect data, counts, and Medicare-age audiences.",
+  title: "FAQ",
+  description: faqPage.lede,
   alternates: { canonical: "/faq" },
-};
-
-const faqSchema = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((item) => ({
-    "@type": "Question",
-    name: item.question,
-    acceptedAnswer: {
-      "@type": "Answer",
-      text: item.answer,
-    },
-  })),
 };
 
 export default function FaqPage() {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <PageHeader eyebrow={faqPage.eyebrow} title={faqPage.title} lede={faqPage.lede} />
-      <div className="container-site max-w-3xl py-14 md:py-20">
-        <FaqList items={faqs} />
-        <Link href="/contact" className={`${buttonClass.primary} mt-10`}>
-          {cta.requestInformation}
-        </Link>
+      <div className="container-site py-12 md:py-16">
+        <div className="faq-layout">
+          <FaqList items={homeFaqs} />
+          <aside className="contact-panel">
+            <p className="contact-panel-kicker">Talk with AmeriList</p>
+            <h2>Ask about a count</h2>
+            <p>Call or email, or send the audience and the market from the form.</p>
+            <a className="contact-panel-phone" href={company.phoneHref}>
+              {company.phoneDisplay}
+            </a>
+            <a href={`mailto:${company.email}`}>{company.email}</a>
+            <Link href={cta.quoteHref} className={`${buttonClass.primary} mt-5`}>
+              {cta.quote}
+            </Link>
+          </aside>
+        </div>
       </div>
     </>
   );

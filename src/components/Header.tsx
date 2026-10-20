@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type MouseEvent } from "react";
-import { Menu, X } from "lucide-react";
-import { announcement, cta, mainNav } from "@/content/site";
+import { cta, company, mainNav } from "@/content/site";
 import { buttonClass } from "@/components/button-styles";
 import { Logo } from "@/components/Logo";
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(`${href}/`);
+  if (href === "/#audiences") return pathname === "/" || pathname.startsWith("/audiences");
+  const path = href.split("#")[0] || "/";
+  if (path === "/") return pathname === "/";
+  return pathname === path || pathname.startsWith(`${path}/`);
 }
 
 export function Header() {
@@ -39,109 +40,57 @@ export function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  function closeMenu() {
+  function onNavClick(event: MouseEvent<HTMLAnchorElement>, href: string) {
     setOpen(false);
-  }
-
-  function onCtaClick(event: MouseEvent<HTMLAnchorElement>) {
-    closeMenu();
-    if (pathname !== "/") return;
-    const target = document.getElementById("request-information");
+    const hash = href.split("#")[1];
+    if (!hash || pathname !== "/") return;
+    const target = document.getElementById(hash);
     if (!target) return;
     event.preventDefault();
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  const quoteHref = pathname === "/" ? "/#quote" : cta.quoteHref;
+
   return (
-    <div className={`sticky top-0 z-50 bg-white/95 backdrop-blur-md ${scrolled ? "shadow-[0_8px_24px_rgba(14,39,68,0.07)]" : ""}`}>
-      {announcement.enabled ? (
-        <div className="border-b border-line bg-mist">
-          <p className="container-site py-2 text-center text-[13px] leading-5 text-navy">
-            {announcement.text}{" "}
+    <header className={`site-header ${scrolled ? "is-scrolled" : ""} ${open ? "nav-open" : ""}`}>
+      <Logo />
+      <nav id="site-nav" aria-label="Primary" className="header-nav">
+        {mainNav.map((item) => (
             <Link
-              href={announcement.href}
-              className="font-semibold whitespace-nowrap text-blue hover:text-blue-dark"
-              onClick={(event) => {
-                if (pathname !== "/") return;
-                const target = document.getElementById("request-information");
-                if (!target) return;
-                event.preventDefault();
-                target.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
+              key={item.href}
+              href={item.href}
+              aria-current={isActive(pathname, item.href) ? "page" : undefined}
+              onClick={(event) => onNavClick(event, item.href)}
             >
-              {announcement.linkLabel}
+              {item.label}
             </Link>
-          </p>
-        </div>
-      ) : null}
-
-      <div className="relative border-b border-line">
-        <div className="container-site flex h-16 min-w-0 items-center justify-between gap-2">
-          <Logo />
-
-          <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">
-            {mainNav.map((item) => {
-              const active = isActive(pathname, item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  onClick={closeMenu}
-                  className={`text-sm font-medium ${active ? "text-navy underline decoration-teal decoration-2 underline-offset-8" : "text-muted hover:text-navy"}`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <Link href="/#request-information" onClick={onCtaClick} aria-label={cta.exploreOptions} className={`${buttonClass.primary} px-3 sm:px-5`}>
-              <span className="sm:hidden">Explore</span>
-              <span className="hidden sm:inline lg:hidden">{cta.exploreOptionsShort}</span>
-              <span className="hidden lg:inline">{cta.exploreOptions}</span>
-            </Link>
-            <button
-              type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-md border border-line text-navy lg:hidden"
-              aria-expanded={open}
-              aria-controls="mobile-nav"
-              onClick={() => setOpen((value) => !value)}
-            >
-              <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
-              {open ? <X aria-hidden="true" size={20} /> : <Menu aria-hidden="true" size={20} />}
-            </button>
-          </div>
-        </div>
-
-        {open ? (
-          <>
-            <button type="button" className="fixed inset-0 z-40 bg-navy/40 lg:hidden" aria-label="Close menu" onClick={() => setOpen(false)} />
-            <div id="mobile-nav" className="absolute inset-x-0 top-full z-50 border-b border-line bg-white shadow-lg lg:hidden">
-              <nav className="container-site flex flex-col py-3" aria-label="Mobile">
-                {mainNav.map((item) => {
-                  const active = isActive(pathname, item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      aria-current={active ? "page" : undefined}
-                      onClick={closeMenu}
-                      className={`flex min-h-11 items-center text-base font-medium ${active ? "text-navy" : "text-muted"}`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-                <Link href="/#request-information" onClick={onCtaClick} className={`${buttonClass.primary} mt-3 mb-2`}>
-                  {cta.exploreOptions}
-                </Link>
-              </nav>
-            </div>
-          </>
-        ) : null}
+          ))}
+          <Link href={quoteHref} className="header-nav-quote" onClick={(event) => onNavClick(event, quoteHref)}>
+            {cta.quote}
+          </Link>
+      </nav>
+      <div className="header-actions">
+        <a className="header-phone" href={company.phoneHref}>
+          {company.phoneDisplay}
+        </a>
+        <Link href={quoteHref} className={`${buttonClass.primary} header-quote`} onClick={(event) => onNavClick(event, quoteHref)}>
+          <span className="btn-label-full">{cta.quote}</span>
+          <span className="btn-label-short">{cta.quoteShort}</span>
+        </Link>
+        <button
+          type="button"
+          className="nav-toggle"
+          aria-expanded={open}
+          aria-controls="site-nav"
+          aria-label={open ? "Close menu" : "Open menu"}
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </div>
-    </div>
+    </header>
   );
 }

@@ -58,5 +58,5 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, code: "received", message: "The information request was submitted." });
+  return NextResponse.json({ ok: true, code: "received", message: "The count request was submitted." });
 }

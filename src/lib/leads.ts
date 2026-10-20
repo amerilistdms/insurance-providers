@@ -1,25 +1,25 @@
-import { interestOptions } from "@/content/site";
+import { interestOptions, type Interest } from "@/content/site";
 
 export type LeadErrors = Partial<
-  Record<"firstName" | "lastName" | "company" | "email" | "phone" | "market" | "areaOfInterest" | "form", string>
+  Record<"fullName" | "email" | "phone" | "interest" | "zip" | "notes" | "consent" | "form", string>
 >;
 
 export type LeadPayload = {
-  firstName: string;
-  lastName: string;
-  company: string;
+  fullName: string;
   email: string;
-  phone: string | null;
-  market: string;
-  areaOfInterest: (typeof interestOptions)[number];
+  phone: string;
+  interest: Interest;
+  zip: string;
+  notes: string | null;
+  consent: true;
   page: string;
-  source: "amerilist-website";
+  source: "amerilist-insurance-website";
   submittedAt: string;
 };
 
-const namePattern = /^[\p{L}][\p{L}\s.'’-]{0,59}$/u;
-const companyPattern = /^[\p{L}0-9][\p{L}0-9\s.&,'’-]{1,79}$/u;
+const namePattern = /^[\p{L}][\p{L}\s.'’-]{1,79}$/u;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const zipPattern = /^\d{5}(-\d{4})?$/;
 
 function clean(value: unknown) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
@@ -27,60 +27,55 @@ function clean(value: unknown) {
 
 export function validateLead(input: Record<string, unknown>): { errors: LeadErrors; value?: LeadPayload } {
   const errors: LeadErrors = {};
-  const firstName = clean(input.firstName);
-  const lastName = clean(input.lastName);
-  const company = clean(input.company);
+  const fullName = clean(input.fullName);
   const email = clean(input.email);
   const phone = clean(input.phone);
-  const market = clean(input.market);
-  const areaOfInterest = clean(input.areaOfInterest);
+  const interest = clean(input.interest);
+  const zip = clean(input.zip);
+  const notes = clean(input.notes);
   const website = clean(input.website);
+  const consent = input.consent === true || input.consent === "yes" || input.consent === "on";
   const page = clean(input.page).slice(0, 120) || "/";
 
-  if (website) {
-    errors.form = "We could not submit this request.";
-  }
+  if (website) errors.form = "We could not submit this request.";
 
-  if (!firstName) errors.firstName = "Enter your first name.";
-  else if (!namePattern.test(firstName)) errors.firstName = "Use letters in your first name.";
-
-  if (!lastName) errors.lastName = "Enter your last name.";
-  else if (!namePattern.test(lastName)) errors.lastName = "Use letters in your last name.";
+  if (!fullName) errors.fullName = "Enter your full name.";
+  else if (!namePattern.test(fullName)) errors.fullName = "Use letters in your full name.";
 
   if (!email) errors.email = "Enter your email address.";
   else if (email.length > 120 || !emailPattern.test(email)) errors.email = "Enter a valid email address.";
 
-  if (!company) errors.company = "Enter your company name.";
-  else if (!companyPattern.test(company)) errors.company = "Use the company name without unusual symbols.";
+  const digits = phone.replace(/\D/g, "");
+  const validPhone = digits.length === 10 || (digits.length === 11 && digits.startsWith("1"));
+  if (!phone) errors.phone = "Enter your phone number.";
+  else if (!validPhone || phone.length > 20) errors.phone = "Enter a 10-digit phone number.";
 
-  if (phone) {
-    const digits = phone.replace(/\D/g, "");
-    const validLength = digits.length === 10 || (digits.length === 11 && digits.startsWith("1"));
-    if (!validLength || phone.length > 20) errors.phone = "Enter a 10-digit phone number, or leave this blank.";
+  if (!interest) errors.interest = "Choose a service or audience.";
+  else if (!interestOptions.includes(interest as Interest)) {
+    errors.interest = "Choose a service or audience from the list.";
   }
 
-  if (!market) errors.market = "Enter the ZIP codes, county, or state.";
-  else if (market.length < 2 || market.length > 160) errors.market = "Keep the market to 160 characters or fewer.";
+  if (!zip) errors.zip = "Enter the market ZIP code.";
+  else if (!zipPattern.test(zip)) errors.zip = "Enter a 5-digit ZIP code.";
 
-  if (!areaOfInterest) errors.areaOfInterest = "Choose an audience.";
-  else if (!interestOptions.includes(areaOfInterest as (typeof interestOptions)[number])) {
-    errors.areaOfInterest = "Choose an audience from the list.";
-  }
+  if (notes.length > 1000) errors.notes = "Keep notes to 1,000 characters or fewer.";
+
+  if (!consent) errors.consent = "Confirm that we may use this information to respond to your request.";
 
   if (Object.keys(errors).length > 0) return { errors };
 
   return {
     errors,
     value: {
-      firstName,
-      lastName,
-      company,
+      fullName,
       email,
-      phone: phone || null,
-      market,
-      areaOfInterest: areaOfInterest as (typeof interestOptions)[number],
+      phone,
+      interest: interest as Interest,
+      zip,
+      notes: notes || null,
+      consent: true,
       page: page.startsWith("/") ? page : "/",
-      source: "amerilist-website",
+      source: "amerilist-insurance-website",
       submittedAt: new Date().toISOString(),
     },
   };

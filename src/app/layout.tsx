@@ -1,29 +1,32 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Manrope } from "next/font/google";
+import { Inter } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { company } from "@/content/site";
 import { indexingEnabled, siteConfig } from "@/lib/site";
 import "./globals.css";
 
-const manrope = Manrope({
+const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-manrope",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  weight: ["400", "500", "600", "700", "800"],
 });
+
+const title = `${company.name} | Prospect Data for Insurance Marketers`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: "AmeriList | Medicare Prospect Data and Marketing",
-    template: "%s | AmeriList",
+    default: title,
+    template: `%s | ${company.name}`,
   },
   description: siteConfig.description,
   applicationName: siteConfig.name,
   authors: [{ name: siteConfig.name }],
   creator: siteConfig.name,
-  category: "health insurance",
+  category: "marketing",
   formatDetection: {
     email: false,
     address: false,
@@ -38,12 +41,12 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
     url: "/",
     siteName: siteConfig.name,
-    title: "AmeriList | Medicare Prospect Data and Marketing",
+    title,
     description: siteConfig.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "AmeriList | Medicare Prospect Data and Marketing",
+    title,
     description: siteConfig.description,
   },
   robots: indexingEnabled
@@ -64,16 +67,18 @@ const jsonLd = {
       "@type": "Organization",
       name: siteConfig.name,
       url: siteConfig.url,
+      email: company.email,
+      telephone: company.phoneDisplay,
       description:
-        "AmeriList is a private data and marketing company. It helps businesses find and reach targeted prospects, including Medicare-age audiences. It is not affiliated with Medicare or any government agency.",
+        "Data and direct marketing for insurance agents, agencies, and marketers.",
     },
   ],
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className={`${manrope.variable} h-full`}>
-      <body className="flex min-h-full flex-col bg-paper font-sans text-ink antialiased">
+    <html lang="en" className={`${inter.variable} h-full`} suppressHydrationWarning>
+      <body className="flex min-h-full flex-col bg-white font-sans text-ink antialiased" suppressHydrationWarning>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <a className="skip-link" href="#main">
           Skip to content

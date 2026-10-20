@@ -4,7 +4,7 @@ import { privacyPage } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Draft privacy policy for AmeriList. Pending legal and compliance review before launch.",
+  description: "Draft privacy policy for count requests on the AmeriList insurance marketing website. Pending legal review before launch.",
   alternates: { canonical: "/privacy" },
   robots: { index: false, follow: false },
 };

@@ -1,10 +1,10 @@
 export const siteConfig = {
   name: "AmeriList",
   description:
-    "AmeriList helps insurance agents, agencies, and marketers find Medicare-age prospects by ZIP code and reach them by mail, phone, or email.",
-  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://www.go360medicare.com").replace(/\/$/, ""),
+    "AmeriList helps insurance agents, agencies, and marketers reach prospects with email lists, direct mail, and phone data.",
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, ""),
   locale: "en_US",
-  themeColor: "#0e2744",
+  themeColor: "#12263f",
 } as const;
 
 export const indexingEnabled = process.env.NEXT_PUBLIC_ALLOW_INDEXING === "true";

@@ -4,7 +4,7 @@ import { termsPage } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Terms of Use",
-  description: "Draft terms of use for AmeriList. Pending legal and compliance review before launch.",
+  description: "Draft terms of use for this insurance marketing website. Pending legal review before launch.",
   alternates: { canonical: "/terms" },
   robots: { index: false, follow: false },
 };

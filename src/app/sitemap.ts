@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { audiences } from "@/content/site";
 import { siteConfig } from "@/lib/site";
 
-const routes = ["", "/about", "/medicare-options", "/faq", "/contact", "/privacy", "/terms", "/disclaimers"];
+const routes = ["", "/about", "/faq", "/contact", "/privacy", "/terms", ...audiences.map((audience) => `/audiences/${audience.slug}`)];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date("2026-10-13");
+  const lastModified = new Date("2026-10-20");
   return routes.map((route) => ({
     url: `${siteConfig.url}${route || "/"}`,
     lastModified,

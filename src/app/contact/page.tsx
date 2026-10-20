@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { LeadForm } from "@/components/LeadForm";
 import { PageHeader } from "@/components/PageBlocks";
-import { company, contactPage } from "@/content/site";
+import { company, contactPage, interestOptions } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Request a Medicare prospect count from AmeriList. Asking does not purchase a list.",
+  description: "Call AmeriList or request a market count for the insurance audience you want to reach.",
   alternates: { canonical: "/contact" },
 };
 
@@ -15,39 +15,32 @@ type ContactPageProps = {
 
 export default async function ContactPage({ searchParams }: ContactPageProps) {
   const params = await searchParams;
-  const interest = Array.isArray(params.interest) ? params.interest[0] : params.interest;
+  const requested = Array.isArray(params.interest) ? params.interest[0] : params.interest;
+  const interest = interestOptions.includes(requested as (typeof interestOptions)[number]) ? requested : "";
 
   return (
     <>
       <PageHeader eyebrow={contactPage.eyebrow} title={contactPage.title} lede={contactPage.lede} />
-      <div className="container-site grid items-start gap-12 py-14 lg:grid-cols-[1.15fr_0.85fr] lg:py-20">
-        <div id="request-information" className="scroll-mt-28 rounded-2xl border border-line bg-white p-5 shadow-[0_16px_40px_rgba(14,39,68,0.05)] sm:p-7">
-          <LeadForm key={interest || "general"} defaultInterest={interest} />
+      <div className="bg-[#f4f8fb]">
+        <div className="container-site grid items-start gap-6 py-12 lg:grid-cols-[1.15fr_0.85fr] lg:py-16">
+          <div className="rounded-2xl bg-white p-5 shadow-[0_10px_30px_rgba(12,61,102,0.08)] sm:p-8">
+            <LeadForm key={interest || "general"} defaultInterest={interest} />
+          </div>
+          <aside className="contact-panel">
+            <p className="contact-panel-kicker">Office</p>
+            <h2>{company.legalName}</h2>
+            <p>{company.about}</p>
+            <a className="contact-panel-phone" href={company.phoneHref}>
+              {company.phoneDisplay}
+            </a>
+            <a href={`mailto:${company.email}`}>{company.email}</a>
+            <address>
+              {company.addressLines.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </address>
+          </aside>
         </div>
-        <aside>
-          <h2 className="text-xl font-semibold text-navy">{contactPage.asideTitle}</h2>
-          <ul className="mt-4 space-y-3">
-            {contactPage.aside.map((item) => (
-              <li key={item} className="text-sm leading-6 text-muted">
-                {item}
-              </li>
-            ))}
-          </ul>
-          <h2 className="mt-10 text-xl font-semibold text-navy">AmeriList</h2>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-muted">
-            <li>
-              <a href={company.phoneHref} className="font-semibold text-blue hover:text-blue-dark">
-                {company.phoneDisplay}
-              </a>
-            </li>
-            <li>
-              <a href={`mailto:${company.email}`} className="font-semibold text-blue hover:text-blue-dark">
-                {company.email}
-              </a>
-            </li>
-            <li>{company.address}</li>
-          </ul>
-        </aside>
       </div>
     </>
   );
